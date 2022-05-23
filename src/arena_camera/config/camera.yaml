@@ -1,0 +1,20 @@
+image_width: 640
+image_height: 480
+camera_name: arena_camera
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [523.136597, 0, 325.6443180, 0, 523.136597, 238.680389, 0, 0, 0]
+distortion_model: ""
+distortion_coefficients:
+  rows: 1
+  cols: 1
+  data: [-0.22994]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [ 1., 0., 0., 0., 1., 0., 0., 0., 1. ]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
