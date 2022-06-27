@@ -5,11 +5,11 @@ camera_matrix:
   rows: 3
   cols: 3
   data: [523.136597, 0, 325.6443180, 0, 523.136597, 238.680389, 0, 0, 0]
-distortion_model: ""
+distortion_model: "pinhole"
 distortion_coefficients:
   rows: 1
-  cols: 1
-  data: [-0.22994]
+  cols: 5
+  data: [-0.229940, 0.117036, 0.000148, 0.000016, -0.046458]
 rectification_matrix:
   rows: 3
   cols: 3

@@ -33,6 +33,8 @@ int main(int argc, char **argv)
     
     double xyz_scale_mm, x_offset_mm, y_offset_mm, z_offset_mm;
     
+    double k1, k2, k3, p1, p2;
+    
     try
     {
         // prepare example
@@ -52,8 +54,7 @@ int main(int argc, char **argv)
         Arena::SetNodeValue<GenICam::gcstring>(pDevice->GetNodeMap(), "PixelFormat", "Coord3D_ABCY16");
                 
         Arena::SetNodeValue<bool>( pDevice->GetNodeMap(), "Scan3dConfidenceThresholdEnable", true); // so no points are marked as invalid
-//         Arena::SetNodeValue<double>( pDevice->GetNodeMap(), "Scan3dConfidenceThreshold", true); // so no points are marked as invalid
-        Arena::SetNodeValue<double>( pDevice->GetNodeMap(), "Scan3dAmplitudeGain", 1.0); // should make the intensity image look brighter
+        Arena::SetNodeValue<double>( pDevice->GetNodeMap(), "Scan3dAmplitudeGain", 5.0); // should make the intensity image look brighter
         
 //         Arena::SetNodeValue<GenICam::gcstring>(pDevice->GetTLStreamNodeMap(), "StreamBufferHandlingMode", "NewestOnly");
         
@@ -65,20 +66,47 @@ int main(int argc, char **argv)
         Arena::SetNodeValue<GenICam::gcstring>(pDevice->GetNodeMap(), "Scan3dCoordinateSelector", "CoordinateC");
         z_offset_mm = Arena::GetNodeValue<double>(pDevice->GetNodeMap(), "Scan3dCoordinateOffset");
         
-        Arena::SetNodeValue<bool>( pDevice->GetTLStreamNodeMap(), "StreamAutoNegotiatePacketSize", true);
-        Arena::SetNodeValue<bool>( pDevice->GetTLStreamNodeMap(), "StreamPacketResendEnable", true);
-        Arena::SetNodeValue<int64_t>( pDevice->GetTLStreamNodeMap(), "StreamMaxNumResendRequestsPerImage", 200);
+//         GenICam::gcstring operatingModeInitial = Arena::GetNodeValue<GenICam::gcstring>(pDevice->GetNodeMap(), "Scan3dOperatingMode");
+//         Arena::SetNodeValue<GenICam::gcstring>(pDevice->GetNodeMap(), "Scan3dOperatingMode", "Distance3000mmSingleFreq"); //Find the right value
+        Arena::SetNodeValue<GenICam::gcstring>(pDevice->GetNodeMap(), "Scan3dOperatingMode", "Distance5000mmMultiFreq"); 
+        
+//         Arena::SetNodeValue<bool>( pDevice->GetTLStreamNodeMap(), "StreamAutoNegotiatePacketSize", true);
+//         Arena::SetNodeValue<bool>( pDevice->GetTLStreamNodeMap(), "StreamPacketResendEnable", true);
+//         Arena::SetNodeValue<int64_t>( pDevice->GetTLStreamNodeMap(), "StreamMaxNumResendRequestsPerImage", 500);
         
         ROS_WARN("PARAMS: %f, %f, %f, %f", xyz_scale_mm, x_offset_mm, y_offset_mm, z_offset_mm);
 
         Arena::SetNodeValue<int64_t>( pDevice->GetNodeMap(), "GevSCPD", 8000); 
         Arena::SetNodeValue<int64_t>( pDevice->GetNodeMap(), "DeviceLinkThroughputReserve", 30); 
+        
 
         //In a similar way you can also read out parameters:
         f_x = Arena::GetNodeValue<double>( pDevice->GetNodeMap(), "CalibFocalLengthX");
         f_y = Arena::GetNodeValue<double>( pDevice->GetNodeMap(), "CalibFocalLengthY");
         c_x = Arena::GetNodeValue<double>( pDevice->GetNodeMap(), "CalibOpticalCenterX");
         c_y = Arena::GetNodeValue<double>( pDevice->GetNodeMap(), "CalibOpticalCenterY");
+                
+        ROS_WARN("Calib param: %f, %f, %f, %f", f_x, f_y, c_x, c_y);
+        
+        
+//         Arena::SetNodeValue<GenICam::gcstring>(pDevice->GetNodeMap(), "CalibLensDistortionValueSelector", "Value0");
+//         double k1 = Arena::GetNodeValue<double>(pDevice->GetNodeMap(), "CalibLensDistortionValue");
+        Arena::SetNodeValue<GenICam::gcstring>(pDevice->GetNodeMap(), "CalibLensDistortionValueSelector", "Value0");
+        k1 = Arena::GetNodeValue<double>(pDevice->GetNodeMap(), "CalibLensDistortionValue");
+        
+        Arena::SetNodeValue<GenICam::gcstring>(pDevice->GetNodeMap(), "CalibLensDistortionValueSelector", "Value1");
+        k2 = Arena::GetNodeValue<double>(pDevice->GetNodeMap(), "CalibLensDistortionValue");
+        
+        Arena::SetNodeValue<GenICam::gcstring>(pDevice->GetNodeMap(), "CalibLensDistortionValueSelector", "Value2");
+        p1 = Arena::GetNodeValue<double>(pDevice->GetNodeMap(), "CalibLensDistortionValue");
+        
+        Arena::SetNodeValue<GenICam::gcstring>(pDevice->GetNodeMap(), "CalibLensDistortionValueSelector", "Value3");
+        p2 = Arena::GetNodeValue<double>(pDevice->GetNodeMap(), "CalibLensDistortionValue");
+        
+        Arena::SetNodeValue<GenICam::gcstring>(pDevice->GetNodeMap(), "CalibLensDistortionValueSelector", "Value4");
+        k3 = Arena::GetNodeValue<double>(pDevice->GetNodeMap(), "CalibLensDistortionValue");
+        
+        ROS_WARN("DISTORTION: %f, %f, %f, %f, %f", k1, k2, p1, p2, k3);
         
         //You can read out the calibration parameters:
         //CalibFocalLengthX, CalibFocalLengthY, CalibOpticalCenterX, CalibOpticalCenterY
@@ -111,7 +139,7 @@ int main(int argc, char **argv)
         Arena::IImage* pImage;
         ROS_INFO("Ask for image");
         try{
-            pImage = pDevice->GetImage(5000);
+            pImage = pDevice->GetImage(2000);
         }
         catch(...){
             ROS_INFO("EXCEPTION!!");
@@ -137,7 +165,6 @@ int main(int argc, char **argv)
         
         cloud->points.clear();
         
-        ROS_INFO("Start looping");
         for (int r = 0; r < H; r++){
             for (int c = 0; c < W; c++){
                 
@@ -150,14 +177,29 @@ int main(int argc, char **argv)
                 point.y = (float)(double(data[1]) * xyz_scale_mm + y_offset_mm)/1000;
                 point.z = (float)(double(data[2]) * xyz_scale_mm + z_offset_mm)/1000;
                 point.intensity = (float)(data[3]);
+               
+                /*
+                double c_x = 0, c_y = 0;
+                double r = sqrt(pow(point.x - c_x, 2) + pow(point.y - c_y, 2));
+                
+                double dist_x = point.x, dist_y = point.y;
+                
+                // Distortion correction
+                point.x = dist_x + (dist_x - c_x)*(k1*pow(r,2) + k2*pow(r,4) + k3*pow(r,6)) + (p1*(r*r + 2*pow(dist_x - c_x,2)) + 2*p2*(dist_x - c_x)*(dist_y - c_y));
+                point.y = dist_y + (dist_y - c_y)*(k1*pow(r,2) + k2*pow(r,4) + k3*pow(r,6)) + (2*p1*(dist_x - c_x)*(dist_y - c_y) + p2*(r*r + 2*pow(dist_y - c_y,2)));
+                
+                // Only radial
+                point.x = c_x + (dist_x - c_x)/(1 + k1*pow(r,2) + k2*pow(r,4) + k3*pow(r,6));
+                point.y = c_y + (dist_y - c_y)/(1 + k1*pow(r,2) + k2*pow(r,4) + k3*pow(r,6));
+                */
                 
                 cloud->points.push_back(point);
 
                 data += 4;
             }
         }
-        ROS_INFO("Stop looping");
         
+        ROS_INFO("Publish !");
         cloud->header.frame_id = "arena_camera";
         pcl_conversions::toPCL(ros::Time::now(), cloud->header.stamp);
         pub_cloud.publish(cloud);
@@ -165,9 +207,10 @@ int main(int argc, char **argv)
         ros::spinOnce();
         loop_rate.sleep();
         
-        if(1)
-            break;
-        delete data;
+        pDevice->RequeueBuffer(pImage);
+        
+//         delete data;
+//         delete pImage;
     }
     
     ROS_WARN("STOPPED");
