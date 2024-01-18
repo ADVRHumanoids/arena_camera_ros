@@ -401,6 +401,13 @@ bool ArenaCameraNode::startGrabbing()
     setImageEncoding(arena_camera_parameter_set_.imageEncoding());
 
     //
+    // PACKETS
+    //
+    // configure Auto Negotiate Packet Size and Packet Resend
+    Arena::SetNodeValue<bool>(pDevice_->GetTLStreamNodeMap(), "StreamAutoNegotiatePacketSize", true);
+    Arena::SetNodeValue<bool>(pDevice_->GetTLStreamNodeMap(), "StreamPacketResendEnable", true);
+
+    //
     // TRIGGER MODE
     //
     GenApi::CStringPtr pTriggerMode = pNodeMap->GetNode("TriggerMode");
@@ -453,65 +460,60 @@ bool ArenaCameraNode::startGrabbing()
 
     // exposure_auto_ will be already set to false if exposure_given_ is true
     // read params () solved the priority between them
-    if(false){
-        if (arena_camera_parameter_set_.exposure_auto_)
-        {
-            Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "ExposureAuto", "Continuous");
-            // todo update parameter on the server
-            ROS_INFO_STREAM("Settings Exposure to auto/Continuous");
-        }
-        else
-        {
-            Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "ExposureAuto", "Off");
-            // todo update parameter on the server
-            ROS_INFO_STREAM("Settings Exposure to off/false");
-        }
-
-        if (arena_camera_parameter_set_.exposure_given_)
-        {
-            float reached_exposure;
-            if (setExposure(arena_camera_parameter_set_.exposure_, reached_exposure))
-            {
-                // Note: ont update the ros param because it might keep 
-                // decreasing or incresing overtime when rerun
-                ROS_INFO_STREAM("Setting exposure to " << arena_camera_parameter_set_.exposure_
-                                                    << ", reached: " << reached_exposure);
-            }
-        }
+    if (arena_camera_parameter_set_.exposure_auto_)
+    {
+      Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "ExposureAuto", "Continuous");
+      // todo update parameter on the server
+      ROS_INFO_STREAM("Settings Exposure to auto/Continuous");
     }
-    ROS_INFO_STREAM("ExposureAuto SKIPPED");
+    else
+    {
+      //Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "ExposureAuto", "Off");
+      // todo update parameter on the server
+      ROS_INFO_STREAM("Settings Exposure to off/false");
+    }
+
+    if (arena_camera_parameter_set_.exposure_given_)
+     {
+      float reached_exposure;
+      if (setExposure(arena_camera_parameter_set_.exposure_, reached_exposure))
+      {
+        // Note: ont update the ros param because it might keep 
+        // decreasing or incresing overtime when rerun
+        ROS_INFO_STREAM("Setting exposure to " << arena_camera_parameter_set_.exposure_
+                                               << ", reached: " << reached_exposure);
+      }
+    }
+
     //
     // GAIN
     //
     
-    if(false){
-        // gain_auto_ will be already set to false if gain_given_ is true
-        // read params () solved the priority between them
-        if (arena_camera_parameter_set_.gain_auto_)
-        {
-            Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "GainAuto", "Continuous");
-            // todo update parameter on the server
-            ROS_INFO_STREAM("Settings Gain to auto/Continuous");
-        }
-        else
-        {
-            Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "GainAuto", "Off");
-            // todo update parameter on the server
-            ROS_INFO_STREAM("Settings Gain to off/false");
-        }
-
-        if (arena_camera_parameter_set_.gain_given_)
-        {
-            float reached_gain;
-            if (setGain(arena_camera_parameter_set_.gain_, reached_gain))
-            {
-                // Note: ont update the ros param because it might keep 
-                // decreasing or incresing overtime when rerun
-                ROS_INFO_STREAM("Setting gain to: " << arena_camera_parameter_set_.gain_ << ", reached: " << reached_gain);
-            }
-        }
+    // gain_auto_ will be already set to false if gain_given_ is true
+    // read params () solved the priority between them
+    if (arena_camera_parameter_set_.gain_auto_)
+    {
+      Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "GainAuto", "Continuous");
+      // todo update parameter on the server
+      ROS_INFO_STREAM("Settings Gain to auto/Continuous");
     }
-    ROS_INFO_STREAM("GainAuto SKIPPED");
+    else
+    {
+      //Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "GainAuto", "Off");
+      // todo update parameter on the server
+      ROS_INFO_STREAM("Settings Gain to off/false");
+    }
+
+    if (arena_camera_parameter_set_.gain_given_)
+    {
+      float reached_gain;
+      if (setGain(arena_camera_parameter_set_.gain_, reached_gain))
+      {
+        // Note: ont update the ros param because it might keep 
+        // decreasing or incresing overtime when rerun
+        ROS_INFO_STREAM("Setting gain to: " << arena_camera_parameter_set_.gain_ << ", reached: " << reached_gain);
+      }
+    }
 
     //
     // GAMMA
@@ -683,6 +685,7 @@ void ArenaCameraNode::setupRectification()
     cv_bridge_img_rect_ = new cv_bridge::CvImage();
   }
   cv_bridge_img_rect_->header = img_raw_msg_.header;
+  cv_bridge_img_rect_->header.frame_id = arena_camera_parameter_set_.cameraFrame();
   cv_bridge_img_rect_->encoding = img_raw_msg_.encoding;
 }
 

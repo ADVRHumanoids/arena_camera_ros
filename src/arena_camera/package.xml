@@ -67,8 +67,6 @@
   <build_depend>sensor_msgs</build_depend>
   <build_depend>roslaunch</build_depend>
   <build_depend>roslint</build_depend>
-  <build_depend>pcl_conversions</build_depend>
-  <build_depend>pcl_ros</build_depend>
   
   <exec_depend>actionlib</exec_depend>
   <exec_depend>camera_control_msgs</exec_depend>
@@ -82,8 +80,6 @@
   <exec_depend>roslaunch</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>roslint</exec_depend>
-  <exec_depend>pcl_conversions</exec_depend>
-  <exec_depend>pcl_ros</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

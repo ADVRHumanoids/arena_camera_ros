@@ -24,6 +24,11 @@ ros::Publisher pub_cloud;
 #define depth_scaling 1
 #define data_scaling 0.29944
 
+#define TLX 225//160
+#define TLY 90//120
+#define W   210//320
+#define H   185//240
+
 void acquire_image(const sensor_msgs::ImagePtr& msg)
 {
     int w = msg->width;
@@ -33,25 +38,33 @@ void acquire_image(const sensor_msgs::ImagePtr& msg)
     std::vector<uint8_t> data = msg->data;
            
     int size  = data.size();
+
+    std::vector<float> buf;
+    buf.resize(size);
         
-    uint32_t i;
+    uint32_t i, o;
+    uint16_t A, B, C;
     
     cloud->points.clear();
 
                 
-    for (int r = 0; r< h; r++){
-        for (int c = 0; c< w; c++){
-            i = r * w + c;
-                        
-            if (data[i] < 254){// and (C*0.25f) > 280.0f/*mm*/){
-                                
-                cloud->points.push_back(pcl::PointXYZ(
-                                    (((c - c_x)*(255-data[i]*data_scaling)/f_x)),
-                                    (((r - c_y)*(255-data[i]*data_scaling)/f_y)),
-                                    ((255-data[i])*data_scaling*depth_scaling)
-                                    ));
-                
-            }            
+    for (int r = TLY; r< (TLY+H); r++){
+        for (int c = TLX; c< (TLX+W); c++){
+            i = r * 640 + c;
+            o = (r - TLY)*W + (c-TLX);
+
+            A = uint16_t(data[o*3 + 0]);
+            B = uint16_t(data[o*3 + 1]);
+            C = uint16_t(data[o*3 + 2]);
+
+            if (A!=0xFFFF and B!=0xFFFF and C!=0xFFFF && (C*0.25f/*+offZ*/)>280.0f/*mm*/){// and (C*0.25f) > 280.0f/*mm*/){
+                buf[i*3+0] = (A*0.25f);
+                buf[i*3+1] = (B*0.25f);
+                buf[i*3+2] = (C*0.25f);
+            }
+            else{
+                buf[i*3+0] = buf[i*3+1] = buf[i*3+2] = 0;
+            }          
         }
     }
         

@@ -1,6 +1,28 @@
+# http://wiki.ros.org/catkin/CMakeLists.txt
+# using catkin must follow the structure and order ectribed in the file above
+
+# -----------------------------------------------------------------------------
+#
+# 1
+#
+# -----------------------------------------------------------------------------
+
 cmake_minimum_required(VERSION 2.8.3)
 
+
+# -----------------------------------------------------------------------------
+#
+# 2
+#
+# -----------------------------------------------------------------------------
+
 project(arena_camera)
+
+# -----------------------------------------------------------------------------
+#
+# 3
+#
+# -----------------------------------------------------------------------------
 
 #
 # ARENA SDK
@@ -12,18 +34,16 @@ project(arena_camera)
 # - ${arena_sdk_LIBRARIES_DIRS} and ${arena_sdk_LIBS}
 # - ${arena_sdk_FOUND}
 
-add_compile_options(-std=c++14)
- 
 find_package(arena_sdk QUIET)
 if (NOT ${arena_sdk_FOUND})
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/Findarena_sdk.cmake")
 endif()
 
+find_package(PCL 1.7 REQUIRED)
+
 #
 # CATKIN
 #
-
-find_package(PCL 1.7 REQUIRED)
 
 set(CATKIN_COMPONENTS
      pcl_conversions
@@ -51,11 +71,42 @@ find_package(
         ${CATKIN_COMPONENTS}
 )
 
+
+# -----------------------------------------------------------------------------
+#
+# 4
+#
+# -----------------------------------------------------------------------------
+
 # This macro ensures modules and global scripts declared therein get installed
 # - Enable Python module support
 # - See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 catkin_python_setup()
 
+
+# -----------------------------------------------------------------------------
+#
+# 5
+#
+# -----------------------------------------------------------------------------
+
+# N/A
+
+
+# -----------------------------------------------------------------------------
+#
+# 6
+#
+# -----------------------------------------------------------------------------
+
+# N/A 
+
+
+# -----------------------------------------------------------------------------
+#
+# 7
+#
+# -----------------------------------------------------------------------------
 
 # http://wiki.ros.org/catkin/CMakeLists.txt#catkin_package.28.29
 catkin_package(
@@ -88,8 +139,15 @@ roslint_cpp( # all .h .cpp files
 roslaunch_add_file_check(launch)
 
 
+# -----------------------------------------------------------------------------
+#
+# 8
+#
+# -----------------------------------------------------------------------------
+
+
 #  flags for all C++ targets
-add_definitions("-std=gnu++14")
+add_definitions("-std=gnu++11")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
@@ -109,6 +167,16 @@ add_executable(
         src/encoding_conversions.cpp
         src/main.cpp
 )
+
+add_executable(helios2plus src/helios2plus.cpp)
+target_include_directories(
+    helios2plus
+        PRIVATE ${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS}
+        PRIVATE ${arena_sdk_INCLUDE_DIRS}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+add_dependencies(helios2plus ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(helios2plus ${catkin_LIBRARIES} ${arena_sdk_LIBRARIES} ${PCL_LIBRARIES})
 
 # needed ".h"s
 target_include_directories(
@@ -134,28 +202,6 @@ add_dependencies(
 # target_link_directories NOT NEEDED as arena_sdk_LIBRARIES is 
 # define with absolute paths
 
-### IMAGE_TO_CLOUD
-add_executable(image_to_cloud src/image_to_cloud.cpp)
-
-
-target_include_directories(
-    image_to_cloud
-        PRIVATE ${catkin_INCLUDE_DIRS} 
-        PRIVATE ${arena_sdk_INCLUDE_DIRS}
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
-target_link_libraries(
-    image_to_cloud
-    ${catkin_LIBRARIES}
-    ${arena_sdk_LIBRARIES}
-)
-
-add_dependencies(
-    image_to_cloud
-    # because this uses one of the catkin componenets which is camera_control_msg
-    ${catkin_EXPORTED_TARGETS} 
-)
 
 #
 # WRITE_DEVICE_USER_ID_TO_CAMERA
@@ -187,6 +233,20 @@ target_link_libraries(
 # target_link_directories NOT NEEDED as arena_sdk_LIBRARIES is 
 # define with absolute paths
 
+
+# -----------------------------------------------------------------------------
+#
+# 9
+#
+# -----------------------------------------------------------------------------
+
+# N/A
+
+# -----------------------------------------------------------------------------
+#
+# 10
+#
+# -----------------------------------------------------------------------------
 
 install(
     DIRECTORY

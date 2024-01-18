@@ -12,6 +12,7 @@ Forked from: https://github.com/lucidvisionlabs/arena_camera_ros
 - ArenaSDK
 
 - Copy "camera.yaml" in ~/.ros/arena_camera /config/
+- sudo cp image_encodings.h /opt/ros/noetic/include/sensor_msgs/
 
 # How to run
 - roscore
