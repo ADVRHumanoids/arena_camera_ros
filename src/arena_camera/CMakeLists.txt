@@ -12,6 +12,8 @@ project(arena_camera)
 # - ${arena_sdk_LIBRARIES_DIRS} and ${arena_sdk_LIBS}
 # - ${arena_sdk_FOUND}
 
+add_compile_options(-std=c++14)
+ 
 find_package(arena_sdk QUIET)
 if (NOT ${arena_sdk_FOUND})
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/Findarena_sdk.cmake")
@@ -87,7 +89,7 @@ roslaunch_add_file_check(launch)
 
 
 #  flags for all C++ targets
-add_definitions("-std=gnu++11")
+add_definitions("-std=gnu++14")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 

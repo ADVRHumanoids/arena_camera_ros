@@ -26,9 +26,6 @@ ros::Publisher pub_cloud;
 
 void acquire_image(const sensor_msgs::ImagePtr& msg)
 {
-    
-    ROS_INFO("Acquire Image");
-    
     int w = msg->width;
     int h = msg->height;
     
@@ -40,8 +37,7 @@ void acquire_image(const sensor_msgs::ImagePtr& msg)
     uint32_t i;
     
     cloud->points.clear();
-    
-    ROS_INFO("Build Cloud");
+
                 
     for (int r = 0; r< h; r++){
         for (int c = 0; c< w; c++){
@@ -58,9 +54,7 @@ void acquire_image(const sensor_msgs::ImagePtr& msg)
             }            
         }
     }
-    
-    ROS_INFO("Publish");
-    
+        
     cloud->header.frame_id = "arena_camera";
     pcl_conversions::toPCL(ros::Time::now(), cloud->header.stamp);
     pub_cloud.publish(cloud);
@@ -69,7 +63,7 @@ void acquire_image(const sensor_msgs::ImagePtr& msg)
 
 int main(int argc, char** argv)
 {    
-    ros::init(argc, argv, "denoisecloud");
+    ros::init(argc, argv, "image_to_cloud");
     ros::NodeHandle nh;
     
     ros::Subscriber subscriber = nh.subscribe("/arena_camera_node/image_raw", 1, acquire_image);

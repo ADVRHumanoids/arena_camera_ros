@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="config_file" default="$(find arena_camera)/config/default.yaml" />
+
+    <node name="arena_camera_node" pkg="arena_camera" type="arena_camera_node" output="screen"
+          respawn="false">
+        <rosparam command="load" file="$(arg config_file)" />
+    </node>
+
+    <node name="arena_cloud" pkg="arena_cloud" type="arena_cloud" output="screen"/>
+
+    <node name="rotate_frame" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 -1.57 arena_camera_rotated arena_camera 1"/>
+
+</launch>
